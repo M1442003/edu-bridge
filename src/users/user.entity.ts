@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany } from 'typeorm';
+import { ClassEntity } from '../classes/class.entity';
 
 export enum UserRole {
   STUDENT = 'STUDENT',
@@ -29,4 +30,7 @@ export class User {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @ManyToMany(() => ClassEntity, (cls) => cls.students)
+  classes: ClassEntity[];
 }

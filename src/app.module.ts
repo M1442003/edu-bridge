@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './users/user.entity';
+import { Course } from './courses/course.entity';
+import { Module as CourseModule } from './modules/module.entity';
+import { ClassEntity } from './classes/class.entity';
 import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
 import { CoursesModule } from './courses/courses.module';
-import { AnnouncementsModule } from './announcements/announcements.module';
-import { AssignmentsModule } from './assignments/assignments.module';
-import { SubmissionsModule } from './submissions/submissions.module';
+import { ModulesModule } from './modules/modules.module';
+import { ClassesModule } from './classes/classes.module';
 
 @Module({
   imports: [
@@ -13,18 +15,17 @@ import { SubmissionsModule } from './submissions/submissions.module';
       type: 'postgres',
       host: 'localhost',
       port: 5432,
-      username: 'matola',      
-      password: 'floki',       
+      username: 'matola',
+      password: 'floki',
       database: 'edubridge_db',
-      autoLoadEntities: true,
-      synchronize: true, 
+      entities: [User, Course, CourseModule, ClassEntity],
+      synchronize: true,
     }),
+
     UsersModule,
-    AuthModule,
     CoursesModule,
-    AnnouncementsModule,
-    AssignmentsModule,
-    SubmissionsModule,
+    ModulesModule,
+    ClassesModule,
   ],
 })
 export class AppModule {}
