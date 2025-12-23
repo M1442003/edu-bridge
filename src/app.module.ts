@@ -8,6 +8,8 @@ import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 import { ModulesModule } from './modules/modules.module';
 import { ClassesModule } from './classes/classes.module';
+import { Announcement } from './announcements/announcements.entity';
+import { Assignment } from './assignments/assignments.entity';
 
 @Module({
   imports: [
@@ -26,6 +28,12 @@ import { ClassesModule } from './classes/classes.module';
     CoursesModule,
     ModulesModule,
     ClassesModule,
+    ClassEntity,
+    Course,
+    User,
+    CourseModule,
+    Announcement,
+    Assignment,
   ],
 })
-export class AppModule {}
+export class AppModule { }
