@@ -1,7 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { ClassEntity } from '../classes/class.entity';
 
-@Entity()
+@Entity('assignments')
 export class Assignment {
   @PrimaryGeneratedColumn()
   id: number;
@@ -15,9 +15,8 @@ export class Assignment {
   @Column({ type: 'date' })
   dueDate: Date;
 
-  @ManyToOne(() => ClassEntity, (cls) => cls.assignments, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ClassEntity, (cls) => cls.assignments, {
+    onDelete: 'CASCADE',
+  })
   class: ClassEntity;
-
-  @CreateDateColumn()
-  createdAt: Date;
 }
