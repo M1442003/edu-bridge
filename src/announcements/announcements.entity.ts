@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, CreateDateColumn, Column, ManyToOne } from 'typeorm';
 import { ClassEntity } from '../classes/class.entity';
 
 @Entity('announcements')
@@ -9,11 +9,12 @@ export class Announcement {
   @Column()
   title: string;
 
-  @Column('text')
+  @Column()
   content: string;
 
-  @ManyToOne(() => ClassEntity, (cls) => cls.announcements, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => ClassEntity, (classEntity) => classEntity.announcements)
   class: ClassEntity;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

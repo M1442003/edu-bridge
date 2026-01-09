@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany } from 'typeorm';
 import { ClassEntity } from '../classes/class.entity';
+import { Exclude } from 'class-transformer';
 
 export enum UserRole {
   STUDENT = 'STUDENT',
@@ -17,7 +18,9 @@ export class User {
 
   @Column({ unique: true })
   email: string;
+  
 
+  @Exclude()
   @Column()
   password: string;
 

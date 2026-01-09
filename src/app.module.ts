@@ -1,17 +1,19 @@
-import { Module } from '@nestjs/common';
+import { Module as NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/user.entity';
 import { Course } from './courses/course.entity';
-import { Module as CourseModule } from './modules/module.entity';
+import { Module } from './modules/module.entity';
 import { ClassEntity } from './classes/class.entity';
+import { Announcement } from './announcements/announcements.entity';
+import { Assignment } from './assignments/assignments.entity';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 import { ModulesModule } from './modules/modules.module';
 import { ClassesModule } from './classes/classes.module';
-import { Announcement } from './announcements/announcements.entity';
-import { Assignment } from './assignments/assignments.entity';
+import { AnnouncementsModule } from './announcements/announcements.module';
+import { AssignmentsModule } from './assignments/assignments.module';
 
-@Module({
+@NestModule({
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -20,7 +22,14 @@ import { Assignment } from './assignments/assignments.entity';
       username: 'matola',
       password: 'floki',
       database: 'edubridge_db',
-      entities: [User, Course, CourseModule, ClassEntity],
+      entities: [
+        User,
+        Course,
+        Module,
+        ClassEntity,
+        Announcement,
+        Assignment,
+      ],
       synchronize: true,
     }),
 
@@ -28,12 +37,9 @@ import { Assignment } from './assignments/assignments.entity';
     CoursesModule,
     ModulesModule,
     ClassesModule,
-    ClassEntity,
-    Course,
-    User,
-    CourseModule,
-    Announcement,
-    Assignment,
+    AnnouncementsModule,
+    AnnouncementsModule,
+    AssignmentsModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}
