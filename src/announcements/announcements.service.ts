@@ -6,6 +6,7 @@ import { ClassEntity } from '../classes/class.entity';
 import { User } from '../users/user.entity';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import * as nodemailer from 'nodemailer';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AnnouncementsService {
@@ -16,7 +17,8 @@ export class AnnouncementsService {
     private classRepo: Repository<ClassEntity>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
-  ) {}
+    private configService: ConfigService, // ConfigService for .env variables
+  ) { }
 
   async create(dto: CreateAnnouncementDto): Promise<Announcement> {
     const classEntity = await this.classRepo.findOne({
@@ -51,17 +53,17 @@ export class AnnouncementsService {
   private async sendEmail(to: string[], subject: string, text: string) {
     try {
       const transporter = nodemailer.createTransport({
-        host: 'smtp.example.com',
-        port: 587,
+        host: this.configService.get<string>('MAIL_HOST'),
+        port: Number(this.configService.get<string>('MAIL_PORT') || 587),
         secure: false,
         auth: {
-          user: 'your_email@example.com',
-          pass: 'your_email_password',
+          user: this.configService.get<string>('MAIL_USER'),
+          pass: this.configService.get<string>('MAIL_PASS'),
         },
       });
 
       await transporter.sendMail({
-        from: '"SmartCR" <no-reply@smartcr.com>',
+        from: this.configService.get<string>('MAIL_FROM'),
         to: to.join(','),
         subject,
         text,

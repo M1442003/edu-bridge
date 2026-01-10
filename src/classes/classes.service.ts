@@ -31,6 +31,10 @@ export class ClassesService {
   }
 
   async addStudents(classId: number, studentIds: number[]) {
+    if (!Array.isArray(studentIds) || studentIds.length === 0) {
+      throw new Error('studentIds must be a non-empty array');
+    }
+
     const cls = await this.classRepo.findOne({
       where: { id: classId },
       relations: ['students'],
@@ -41,11 +45,17 @@ export class ClassesService {
       where: { id: In(studentIds), role: UserRole.STUDENT },
     });
 
-    cls.students = students;
+    const existingIds = new Set(cls.students?.map((s) => s.id) || []);
+    cls.students = [...(cls.students || []), ...students.filter(s => !existingIds.has(s.id))];
+
     return this.classRepo.save(cls);
   }
 
   async assignModules(classId: number, moduleIds: number[]) {
+    if (!Array.isArray(moduleIds) || moduleIds.length === 0) {
+      throw new Error('moduleIds must be a non-empty array');
+    }
+
     const cls = await this.classRepo.findOne({
       where: { id: classId },
       relations: ['modules'],
@@ -56,7 +66,10 @@ export class ClassesService {
       where: { id: In(moduleIds) },
     });
 
-    cls.modules = modules;
+  
+    const existingIds = new Set(cls.modules?.map((m) => m.id) || []);
+    cls.modules = [...(cls.modules || []), ...modules.filter(m => !existingIds.has(m.id))];
+
     return this.classRepo.save(cls);
   }
 

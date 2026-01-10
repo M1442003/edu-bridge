@@ -1,4 +1,5 @@
 import { Module as NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/user.entity';
 import { Course } from './courses/course.entity';
@@ -12,16 +13,20 @@ import { ModulesModule } from './modules/modules.module';
 import { ClassesModule } from './classes/classes.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { AssignmentsModule } from './assignments/assignments.module';
+import { AuthModule } from './auth/auth.module';
 
 @NestModule({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'matola',
-      password: 'floki',
-      database: 'edubridge_db',
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT || 5432),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
       entities: [
         User,
         Course,
@@ -32,14 +37,13 @@ import { AssignmentsModule } from './assignments/assignments.module';
       ],
       synchronize: true,
     }),
-
     UsersModule,
     CoursesModule,
     ModulesModule,
     ClassesModule,
     AnnouncementsModule,
-    AnnouncementsModule,
     AssignmentsModule,
+    AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
