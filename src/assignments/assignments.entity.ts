@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { ClassEntity } from '../classes/class.entity';
 
-@Entity('assignments')
+@Entity()
 export class Assignment {
   @PrimaryGeneratedColumn()
   id: number;
@@ -18,8 +18,16 @@ export class Assignment {
   @Column('text')
   description: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'date' })
   dueDate: Date;
+
+  @Column('json', { nullable: true })
+  attachments: {
+    originalName: string;
+    fileName: string;
+    mimeType: string;
+    size: number;
+  }[];
 
   @ManyToOne(() => ClassEntity, (cls) => cls.assignments, {
     onDelete: 'CASCADE',

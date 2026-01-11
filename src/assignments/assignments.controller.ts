@@ -1,22 +1,36 @@
-import { Controller, Post, Get, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Param,
+  Body,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { assignmentStorage } from './multer.config';
 import { AssignmentsService } from './assignments.service';
 
 @Controller('assignments')
 export class AssignmentsController {
-  constructor(private assignmentsService: AssignmentsService) {}
+  constructor(private readonly service: AssignmentsService) {}
 
   @Post(':classId')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: assignmentStorage,
+    }),
+  )
   create(
     @Param('classId') classId: number,
-    @Body('title') title: string,
-    @Body('description') description: string,
-    @Body('dueDate') dueDate: string,
+    @Body() body,
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return this.assignmentsService.create(classId, title, description, new Date(dueDate));
-  }
-
-  @Get('class/:classId')
-  findByClass(@Param('classId') classId: number) {
-    return this.assignmentsService.findByClass(classId);
+    return this.service.create(
+      classId,
+      body.title,
+      body.description,
+      new Date(body.dueDate),
+      files,
+    );
   }
 }

@@ -13,13 +13,14 @@ export class AssignmentsService {
 
     @InjectRepository(ClassEntity)
     private classRepo: Repository<ClassEntity>,
-  ) {}
+  ) { }
 
   async create(
     classId: number,
     title: string,
     description: string,
     dueDate: Date,
+    files: Express.Multer.File[],
   ) {
     const cls = await this.classRepo.findOne({
       where: { id: classId },
@@ -28,11 +29,19 @@ export class AssignmentsService {
 
     if (!cls) throw new NotFoundException('Class not found');
 
+    const attachments = files?.map((file) => ({
+      originalName: file.originalname,
+      fileName: file.filename,
+      mimeType: file.mimetype,
+      size: file.size,
+    }));
+
     const assignment = this.assignmentRepo.create({
       title,
       description,
       dueDate,
       class: cls,
+      attachments,
     });
 
     await this.assignmentRepo.save(assignment);
@@ -44,6 +53,7 @@ export class AssignmentsService {
 
     return assignment;
   }
+
 
   async findByClass(classId: number) {
     return this.assignmentRepo.find({
@@ -61,6 +71,11 @@ export class AssignmentsService {
       },
     });
 
+    const fileLinks = assignment.attachments?.map(
+      (file) =>
+        `📎 ${file.originalName}: http://localhost:3000/files/assignments/${file.fileName}`,
+    ).join('\n');
+
     await transporter.sendMail({
       from: `"EduBridge" <${process.env.MAIL_USER}>`,
       to: to.join(','),
@@ -72,8 +87,12 @@ Title: ${assignment.title}
 Description: ${assignment.description}
 Due Date: ${assignment.dueDate.toDateString()}
 
-Please login to EduBridge to view details.
-      `,
+Attachments:
+${fileLinks || 'No attachments'}
+
+Login to EduBridge for more details.
+    `,
     });
   }
+
 }
