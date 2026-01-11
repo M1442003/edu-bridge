@@ -25,14 +25,14 @@ export class ClassEntity {
   @Column()
   year: number;
 
-  @ManyToOne(() => Course, (course) => course.classes)
+  @ManyToOne(() => Course, (course) => course.classes, { eager: true })
   course: Course;
 
   @ManyToMany(() => User, (user) => user.class)
-  @JoinTable()
-  students: User[];
+@JoinTable()
+students: User[];
 
-  @ManyToMany(() => CourseModule)
+  @ManyToMany(() => CourseModule, { eager: true })
   @JoinTable()
   modules: CourseModule[];
 

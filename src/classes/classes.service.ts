@@ -20,7 +20,7 @@ export class ClassesService {
 
     @InjectRepository(CourseModule)
     private moduleRepo: Repository<CourseModule>,
-  ) {}
+  ) { }
 
   async create(name: string, year: number, courseId: number) {
     const course = await this.courseRepo.findOne({ where: { id: courseId } });
@@ -30,6 +30,23 @@ export class ClassesService {
     return this.classRepo.save(cls);
   }
 
+  async createMany(classes: { name: string; year: number; courseId: number }[]) {
+    for (const c of classes) {
+      const course = await this.courseRepo.findOneBy({ id: c.courseId });
+      if (!course) continue;
+
+      const cls = this.classRepo.create({
+        name: c.name,
+        year: c.year,
+        course,
+      });
+
+      await this.classRepo.save(cls);
+    }
+
+    return { message: `${classes.length} classes created successfully` };
+  }
+  
   async addStudents(classId: number, studentIds: number[]) {
     if (!Array.isArray(studentIds) || studentIds.length === 0) {
       throw new Error('studentIds must be a non-empty array');
@@ -66,7 +83,7 @@ export class ClassesService {
       where: { id: In(moduleIds) },
     });
 
-  
+
     const existingIds = new Set(cls.modules?.map((m) => m.id) || []);
     cls.modules = [...(cls.modules || []), ...modules.filter(m => !existingIds.has(m.id))];
 
