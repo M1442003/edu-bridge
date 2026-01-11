@@ -28,7 +28,7 @@ export class ClassEntity {
   @ManyToOne(() => Course, (course) => course.classes)
   course: Course;
 
-  @ManyToMany(() => User, (user) => user.classes)
+  @ManyToMany(() => User, (user) => user.class)
   @JoinTable()
   students: User[];
 

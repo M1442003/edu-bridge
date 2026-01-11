@@ -1,17 +1,22 @@
-import { IsEmail, IsNotEmpty, MinLength, IsEnum } from 'class-validator';
-import { UserRole } from '../../users/user.entity';
+import { IsEmail, IsNotEmpty, MinLength, IsNumber, Matches } from 'class-validator';
 
 export class RegisterDto {
   @IsNotEmpty()
   name: string;
 
+  @IsNotEmpty()
+  @Matches(/^\d{13}$/)
+  regNo: string;
+
   @IsEmail()
   email: string;
 
-  @IsNotEmpty()
   @MinLength(6)
   password: string;
 
-  @IsEnum(UserRole)
-  role: UserRole;
+  @IsNotEmpty()
+  courseCode: string;
+
+  @IsNumber()
+  year: number;
 }

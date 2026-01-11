@@ -10,6 +10,7 @@ export class AssignmentsService {
   constructor(
     @InjectRepository(Assignment)
     private assignmentRepo: Repository<Assignment>,
+
     @InjectRepository(ClassEntity)
     private classRepo: Repository<ClassEntity>,
   ) {}
@@ -19,62 +20,60 @@ export class AssignmentsService {
     title: string,
     description: string,
     dueDate: Date,
-  ): Promise<Assignment> {
-    const classEntity = await this.classRepo.findOne({
+  ) {
+    const cls = await this.classRepo.findOne({
       where: { id: classId },
       relations: ['students'],
     });
 
-    if (!classEntity) throw new NotFoundException('Class not found');
+    if (!cls) throw new NotFoundException('Class not found');
 
     const assignment = this.assignmentRepo.create({
       title,
       description,
       dueDate,
-      class: classEntity,
+      class: cls,
     });
 
     await this.assignmentRepo.save(assignment);
 
-    const emails = classEntity.students.map((s) => s.email);
+    const emails = cls.students.map((s) => s.email);
     if (emails.length) {
-      await this.sendEmail(
-        emails,
-        `New Assignment: ${title}`,
-        `Description: ${description}\nDue Date: ${dueDate.toDateString()}`,
-      );
+      await this.sendEmail(emails, assignment);
     }
 
     return assignment;
   }
 
-  async findByClass(classId: number): Promise<Assignment[]> {
+  async findByClass(classId: number) {
     return this.assignmentRepo.find({
       where: { class: { id: classId } },
       order: { createdAt: 'DESC' },
     });
   }
 
-  private async sendEmail(to: string[], subject: string, text: string) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: {
-          user: 'yourgmail@gmail.com',
-          pass: 'APP_PASSWORD',
-        },
-      });
+  private async sendEmail(to: string[], assignment: Assignment) {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
 
-      await transporter.sendMail({
-        from: '"SmartCR" <no-reply@smartcr.com>',
-        to: to.join(','),
-        subject,
-        text,
-      });
-    } catch (error) {
-      console.error('Assignment email error:', error);
-    }
+    await transporter.sendMail({
+      from: `"EduBridge" <${process.env.MAIL_USER}>`,
+      to: to.join(','),
+      subject: `New Assignment: ${assignment.title}`,
+      text: `
+New assignment has been posted.
+
+Title: ${assignment.title}
+Description: ${assignment.description}
+Due Date: ${assignment.dueDate.toDateString()}
+
+Please login to EduBridge to view details.
+      `,
+    });
   }
 }

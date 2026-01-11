@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, CreateDateColumn, ManyToMany } from 'typeorm';
 import { ClassEntity } from '../classes/class.entity';
 import { Exclude } from 'class-transformer';
 
@@ -18,7 +18,7 @@ export class User {
 
   @Column({ unique: true })
   email: string;
-  
+
 
   @Exclude()
   @Column()
@@ -34,6 +34,10 @@ export class User {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToMany(() => ClassEntity, (cls) => cls.students)
-  classes: ClassEntity[];
+  @ManyToOne(() => ClassEntity, (cls) => cls.students, { eager: true })
+  class: ClassEntity;
+
+  @Column({ unique: true })
+  regNo: string;
+
 }

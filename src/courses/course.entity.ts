@@ -29,6 +29,10 @@ export class Course {
   @OneToMany(() => Module, (module) => module.course)
   modules: Module[];
 
+  @Column({ unique: true })
+  code: string;
+
+
   @OneToMany(() => ClassEntity, (cls) => cls.course)
   classes: ClassEntity[];
 }
