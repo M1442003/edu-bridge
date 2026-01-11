@@ -26,12 +26,11 @@ export class Course {
   })
   level: CourseLevel;
 
-  @OneToMany(() => Module, (module) => module.course)
-  modules: Module[];
-
   @Column({ unique: true })
   code: string;
 
+  @OneToMany(() => Module, (module) => module.course)
+  modules: Module[];
 
   @OneToMany(() => ClassEntity, (cls) => cls.course)
   classes: ClassEntity[];
