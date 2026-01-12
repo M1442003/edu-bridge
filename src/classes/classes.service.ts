@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, IsNull } from 'typeorm';
 import { ClassEntity } from './class.entity';
 import { Course } from '../courses/course.entity';
 import { User, UserRole } from '../users/user.entity';
@@ -20,7 +20,42 @@ export class ClassesService {
 
     @InjectRepository(CourseModule)
     private moduleRepo: Repository<CourseModule>,
-  ) { }
+  ) {}
+
+  async assignStudentsToClasses() {
+    const students = await this.userRepo.find({
+      where: { role: UserRole.STUDENT, class: IsNull() },
+    });
+
+    const results: { email: string; success: boolean; reason?: string }[] = [];
+
+    for (const student of students) {
+      const course = await this.courseRepo.findOne({
+        where: { code: student['courseCode'] },
+      });
+
+      if (!course) {
+        results.push({ email: student.email, success: false, reason: 'Course not found' });
+        continue;
+      }
+
+      const cls = await this.classRepo.findOne({
+        where: { course: { id: course.id }, year: student['year'] },
+      });
+
+      if (!cls) {
+        results.push({ email: student.email, success: false, reason: 'Class not found' });
+        continue;
+      }
+
+      student.class = cls;
+      await this.userRepo.save(student);
+
+      results.push({ email: student.email, success: true });
+    }
+
+    return { message: 'Assignment completed', results };
+  }
 
   async create(name: string, year: number, courseId: number) {
     const course = await this.courseRepo.findOne({ where: { id: courseId } });
@@ -46,7 +81,7 @@ export class ClassesService {
 
     return { message: `${classes.length} classes created successfully` };
   }
-  
+
   async addStudents(classId: number, studentIds: number[]) {
     if (!Array.isArray(studentIds) || studentIds.length === 0) {
       throw new Error('studentIds must be a non-empty array');
@@ -79,10 +114,7 @@ export class ClassesService {
     });
     if (!cls) throw new NotFoundException('Class not found');
 
-    const modules = await this.moduleRepo.find({
-      where: { id: In(moduleIds) },
-    });
-
+    const modules = await this.moduleRepo.find({ where: { id: In(moduleIds) } });
 
     const existingIds = new Set(cls.modules?.map((m) => m.id) || []);
     cls.modules = [...(cls.modules || []), ...modules.filter(m => !existingIds.has(m.id))];

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, CreateDateColumn, ManyToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, CreateDateColumn } from 'typeorm';
 import { ClassEntity } from '../classes/class.entity';
 import { Exclude } from 'class-transformer';
 
@@ -19,7 +19,6 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-
   @Exclude()
   @Column()
   password: string;
@@ -34,10 +33,16 @@ export class User {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => ClassEntity, (cls) => cls.students, { eager: true })
-  class: ClassEntity;
+  @ManyToOne(() => ClassEntity, (cls) => cls.students, { eager: true, nullable: true })
+  class: ClassEntity | null;
 
   @Column({ unique: true })
   regNo: string;
+
+  @Column({ nullable: true })
+  courseCode: string;
+
+  @Column({ nullable: true })
+  year: number;
 
 }

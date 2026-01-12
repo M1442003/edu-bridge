@@ -3,49 +3,55 @@ import { ClassesService } from './classes.service';
 
 @Controller('classes')
 export class ClassesController {
-  constructor(private readonly classesService: ClassesService) {}
+    constructor(private readonly classesService: ClassesService) { }
 
-  // Create a single class
-  @Post()
-  create(
-    @Body('name') name: string,
-    @Body('year') year: number,
-    @Body('courseId') courseId: number,
-  ) {
-    return this.classesService.create(name, year, courseId);
-  }
+    // Create a single class
+    @Post()
+    create(
+        @Body('name') name: string,
+        @Body('year') year: number,
+        @Body('courseId') courseId: number,
+    ) {
+        return this.classesService.create(name, year, courseId);
+    }
 
-  @Post('bulk')
-  createMany(
-    @Body() body: { name: string; year: number; courseId: number }[],
-  ) {
-    return this.classesService.createMany(body);
-  }
+    @Post('bulk')
+    createMany(
+        @Body() body: { name: string; year: number; courseId: number }[],
+    ) {
+        return this.classesService.createMany(body);
+    }
 
-  @Post(':id/students')
-  addStudents(
-    @Param('id') id: number,
-    @Body('studentIds') studentIds: number[],
-  ) {
-    return this.classesService.addStudents(id, studentIds);
-  }
+    @Post(':id/students')
+    addStudents(
+        @Param('id') id: number,
+        @Body('studentIds') studentIds: number[],
+    ) {
+        return this.classesService.addStudents(id, studentIds);
+    }
 
- 
-  @Post(':id/modules')
-  assignModules(
-    @Param('id') id: number,
-    @Body('moduleIds') moduleIds: number[],
-  ) {
-    return this.classesService.assignModules(id, moduleIds);
-  }
 
-  @Get()
-  findAll() {
-    return this.classesService.findAll();
-  }
+    @Post(':id/modules')
+    assignModules(
+        @Param('id') id: number,
+        @Body('moduleIds') moduleIds: number[],
+    ) {
+        return this.classesService.assignModules(id, moduleIds);
+    }
 
-  @Get('course/:courseId')
-  findByCourse(@Param('courseId') courseId: string) {
-    return this.classesService.findByCourse(Number(courseId));
-  }
+
+    @Post('assign-old-students')
+    async assignOldStudents() {
+        return this.classesService.assignStudentsToClasses();
+    }
+
+    @Get()
+    findAll() {
+        return this.classesService.findAll();
+    }
+
+    @Get('course/:courseId')
+    findByCourse(@Param('courseId') courseId: string) {
+        return this.classesService.findByCourse(Number(courseId));
+    }
 }
