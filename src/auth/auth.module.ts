@@ -8,6 +8,9 @@ import { User } from '../users/user.entity';
 import { Course } from '../courses/course.entity';
 import { ClassEntity } from '../classes/class.entity';
 import { Module as CourseModule } from '../modules/module.entity';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import type { StringValue } from 'ms';
+
 
 @Module({
   imports: [
@@ -17,12 +20,18 @@ import { Module as CourseModule } from '../modules/module.entity';
       ClassEntity,
       CourseModule,
     ]),
-    JwtModule.register({
-      secret: 'your_jwt_secret',
-      signOptions: { expiresIn: '1h' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.getOrThrow<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: config.get<string>('JWT_EXPIRES_IN', '1h') as StringValue,
+        },
+      }),
     }),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
 })
-export class AuthModule {}
+export class AuthModule { }
