@@ -14,7 +14,7 @@ export class ModulesService {
 
     @InjectRepository(Course)
     private courseRepo: Repository<Course>,
-  ) {}
+  ) { }
 
   async create(name: string, courseId: number, semester: Semester, year: number) {
     const course = await this.courseRepo.findOne({ where: { id: courseId } });
@@ -42,6 +42,7 @@ export class ModulesService {
 
       const module = this.moduleRepo.create({
         name: dto.name,
+        code: dto.code,
         course,
         semester: dto.semester as Semester,
         year: dto.year,
