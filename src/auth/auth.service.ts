@@ -69,7 +69,6 @@ export class AuthService {
 
     return { message: `${results.length} users processed`, results };
   }
-
   async login(email: string, password: string) {
     const user = await this.userRepo.findOne({
       where: { email },
@@ -94,16 +93,20 @@ export class AuthService {
     const token = this.jwtService.sign(payload);
 
     return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      regNo: user.regNo,
-      createdAt: user.createdAt,
-      courseCode: user.class?.course?.code ?? null,
-      year: user.class?.year ?? null,
-      class: user.class,
+      access_token: token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        regNo: user.regNo,
+        createdAt: user.createdAt,
+        courseCode: user.class?.course?.code ?? null,
+        year: user.class?.year ?? null,
+        class: user.class,
+      },
     };
   }
+
 
 }

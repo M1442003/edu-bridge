@@ -30,7 +30,6 @@ export class Timetable {
     @Column({ default: false })
     reminderSent: boolean;
 
-
     @Column()
     venue: string;
 }
