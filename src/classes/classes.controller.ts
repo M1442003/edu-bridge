@@ -5,7 +5,6 @@ import { ClassesService } from './classes.service';
 export class ClassesController {
     constructor(private readonly classesService: ClassesService) { }
 
-    // Create a single class
     @Post()
     create(
         @Body('name') name: string,

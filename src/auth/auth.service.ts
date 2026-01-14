@@ -6,6 +6,8 @@ import { User, UserRole } from '../users/user.entity';
 import { Course } from '../courses/course.entity';
 import { ClassEntity } from '../classes/class.entity';
 import { RegisterDto } from './dto/register.dto';
+import { JwtService } from '@nestjs/jwt';
+
 
 @Injectable()
 export class AuthService {
@@ -18,7 +20,9 @@ export class AuthService {
 
     @InjectRepository(ClassEntity)
     private classRepo: Repository<ClassEntity>,
-  ) {}
+
+    private jwtService: JwtService,
+  ) { }
 
   async register(dto: RegisterDto) {
     const existing = await this.userRepo.findOne({ where: { email: dto.email } });
@@ -67,12 +71,39 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    const user = await this.userRepo.findOne({ where: { email } });
-    if (!user) throw new BadRequestException('Invalid credentials');
+    const user = await this.userRepo.findOne({
+      where: { email },
+      relations: {
+        class: {
+          course: true,
+          modules: true,
+        },
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid credentials');
+    }
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) throw new BadRequestException('Invalid credentials');
+    if (!match) {
+      throw new BadRequestException('Invalid credentials');
+    }
 
-    return user;
+    const payload = { sub: user.id, role: user.role };
+    const token = this.jwtService.sign(payload);
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      regNo: user.regNo,
+      createdAt: user.createdAt,
+      courseCode: user.class?.course?.code ?? null,
+      year: user.class?.year ?? null,
+      class: user.class,
+    };
   }
+
 }
