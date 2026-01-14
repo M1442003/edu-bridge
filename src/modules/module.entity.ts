@@ -17,9 +17,8 @@ export class Module {
   @Column()
   name: string;
 
-  @Column()
-  code: string;
-
+ @Column({ nullable: false })
+code: string;
   @Column()
   year: number;
 
