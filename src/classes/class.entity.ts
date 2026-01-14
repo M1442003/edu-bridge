@@ -1,18 +1,18 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  ManyToOne, 
-  ManyToMany, 
-  JoinTable, 
-  OneToMany, 
-  CreateDateColumn 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+  OneToMany,
+  CreateDateColumn
 } from 'typeorm';
 import { Course } from '../courses/course.entity';
 import { User } from '../users/user.entity';
 import { Module as CourseModule } from '../modules/module.entity';
 import { Announcement } from '../announcements/announcements.entity';
-import { Assignment } from '../assignments/assignments.entity';      
+import { Assignment } from '../assignments/assignments.entity';
 
 @Entity()
 export class ClassEntity {
@@ -29,8 +29,8 @@ export class ClassEntity {
   course: Course;
 
   @ManyToMany(() => User, (user) => user.class)
-@JoinTable()
-students: User[];
+  @JoinTable()
+  students: User[];
 
   @ManyToMany(() => CourseModule, { eager: true })
   @JoinTable()

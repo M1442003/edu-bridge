@@ -6,6 +6,7 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 import { ClassEntity } from '../classes/class.entity';
+import { Module } from '../modules/module.entity';
 
 @Entity()
 export class Assignment {
@@ -20,6 +21,11 @@ export class Assignment {
 
   @Column({ type: 'date' })
   dueDate: Date;
+
+  @ManyToOne(() => Module, (module) => module.assignments, {
+    onDelete: 'CASCADE',
+  })
+  module: Module;
 
   @Column('json', { nullable: true })
   attachments: {

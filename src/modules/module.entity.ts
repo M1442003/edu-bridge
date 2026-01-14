@@ -2,13 +2,16 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  OneToMany,
   ManyToOne,
+  ManyToMany,
 } from 'typeorm';
 import { Course } from '../courses/course.entity';
 import { ClassEntity } from '../classes/class.entity';
 import { Semester } from '../common/enums/semester.enum';
-
-
+import { Assignment } from '../assignments/assignments.entity';
+import { Announcement } from '../announcements/announcements.entity';
+import { User } from '../users/user.entity';
 @Entity('modules')
 export class Module {
   @PrimaryGeneratedColumn()
@@ -32,6 +35,12 @@ export class Module {
     onDelete: 'CASCADE',
   })
   course: Course;
+
+  @OneToMany(() => Assignment, (a) => a.module)
+  assignments: Assignment[];
+
+  @OneToMany(() => Announcement, (a) => a.module)
+  announcements: Announcement[];
 
   @ManyToOne(() => ClassEntity, (cls) => cls.modules, {
     onDelete: 'CASCADE',
