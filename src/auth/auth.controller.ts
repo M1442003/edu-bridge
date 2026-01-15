@@ -2,7 +2,7 @@ import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-
+import { Public } from './public.decorator';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
@@ -31,6 +31,13 @@ export class AuthController {
 
     return { message: `${results.length} users processed`, results };
   }
+
+  @Post('register/lecturer')
+  @Public()
+  async registerLecturer(@Body() dto: RegisterDto) {
+    return this.authService.registerLecturer(dto);
+  }
+
 
   @Post('login')
   async login(

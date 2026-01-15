@@ -69,6 +69,26 @@ export class AuthService {
 
     return { message: `${results.length} users processed`, results };
   }
+
+  async registerLecturer(dto: RegisterDto) {
+    const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+    if (existing) {
+      throw new BadRequestException('User already exists');
+    }
+
+    const lecturer = this.userRepo.create({
+      name: dto.name,
+      email: dto.email,
+      regNo: dto.regNo,
+      password: await bcrypt.hash(dto.password, 10),
+      role: UserRole.LECTURER,
+      class: null,
+    });
+
+    return this.userRepo.save(lecturer);
+  }
+
+
   async login(email: string, password: string) {
     const user = await this.userRepo.findOne({
       where: { email },
