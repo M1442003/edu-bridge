@@ -16,9 +16,6 @@ import { UserRole } from '../users/user.entity';
 export class AssignmentsController {
   constructor(private readonly assignmentsService: AssignmentsService) {}
 
-  /**
-   * Lecturer posts assignment to a module & class
-   */
   @Post()
   @Roles(UserRole.LECTURER)
   @UseInterceptors(

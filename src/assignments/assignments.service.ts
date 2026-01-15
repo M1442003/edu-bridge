@@ -35,7 +35,6 @@ export class AssignmentsService {
     });
     if (!module) throw new NotFoundException('Module not found');
 
-    // ✅ Ensure module belongs to the class
     const classHasModule = cls.modules.some((m) => m.id === module.id);
     if (!classHasModule) {
       throw new NotFoundException('Module not assigned to this class');
@@ -59,7 +58,6 @@ export class AssignmentsService {
 
     await this.assignmentRepo.save(assignment);
 
-    // 🔔 Notify students
     if (cls.students.length) {
       await this.sendEmail(
         cls.students.map((s) => s.email),
