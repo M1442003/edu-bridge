@@ -20,8 +20,9 @@ export class Module {
   @Column()
   name: string;
 
-  @Column({ nullable: false })
+  @Column()
   code: string;
+
   @Column()
   year: number;
 
@@ -36,14 +37,12 @@ export class Module {
   })
   course: Course;
 
+  @ManyToMany(() => ClassEntity, (cls) => cls.modules)
+  classes: ClassEntity[];
+
   @OneToMany(() => Assignment, (a) => a.module)
   assignments: Assignment[];
 
   @OneToMany(() => Announcement, (a) => a.module)
   announcements: Announcement[];
-
-  @ManyToOne(() => ClassEntity, (cls) => cls.modules, {
-    onDelete: 'CASCADE',
-  })
-  class: ClassEntity;
 }

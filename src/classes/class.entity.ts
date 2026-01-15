@@ -28,9 +28,9 @@ export class ClassEntity {
   @ManyToOne(() => Course, (course) => course.classes, { eager: true })
   course: Course;
 
-  @ManyToMany(() => User, (user) => user.class)
-  @JoinTable()
+  @OneToMany(() => User, (user) => user.class)
   students: User[];
+
 
   @ManyToMany(() => CourseModule, { eager: true })
   @JoinTable()
