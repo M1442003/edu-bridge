@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Assignment } from './assignments.entity';
 import { ClassEntity } from '../classes/class.entity';
 import * as nodemailer from 'nodemailer';
+import { Module } from '../modules/module.entity';
+import { CreateAssignmentDto } from './dto/create-assignment.dto';
 
 @Injectable()
 export class AssignmentsService {
@@ -11,23 +13,33 @@ export class AssignmentsService {
     @InjectRepository(Assignment)
     private assignmentRepo: Repository<Assignment>,
 
+    @InjectRepository(Module)
+    private moduleRepo: Repository<Module>,
+
     @InjectRepository(ClassEntity)
     private classRepo: Repository<ClassEntity>,
   ) { }
 
   async create(
-    classId: number,
-    title: string,
-    description: string,
-    dueDate: Date,
+    dto: CreateAssignmentDto,
     files: Express.Multer.File[],
   ) {
     const cls = await this.classRepo.findOne({
-      where: { id: classId },
-      relations: ['students'],
+      where: { id: dto.classId },
+      relations: ['students', 'modules'],
     });
-
     if (!cls) throw new NotFoundException('Class not found');
+
+    const module = await this.moduleRepo.findOne({
+      where: { id: dto.moduleId },
+    });
+    if (!module) throw new NotFoundException('Module not found');
+
+    // ✅ Ensure module belongs to the class
+    const classHasModule = cls.modules.some((m) => m.id === module.id);
+    if (!classHasModule) {
+      throw new NotFoundException('Module not assigned to this class');
+    }
 
     const attachments = files?.map((file) => ({
       originalName: file.originalname,
@@ -37,28 +49,40 @@ export class AssignmentsService {
     }));
 
     const assignment = this.assignmentRepo.create({
-      title,
-      description,
-      dueDate,
+      title: dto.title,
+      description: dto.description,
+      dueDate: dto.dueDate,
       class: cls,
+      module,
       attachments,
     });
 
     await this.assignmentRepo.save(assignment);
 
-    const emails = cls.students.map((s) => s.email);
-    if (emails.length) {
-      await this.sendEmail(emails, assignment);
+    // 🔔 Notify students
+    if (cls.students.length) {
+      await this.sendEmail(
+        cls.students.map((s) => s.email),
+        assignment,
+      );
     }
 
     return assignment;
   }
 
-
   async findByClass(classId: number) {
     return this.assignmentRepo.find({
       where: { class: { id: classId } },
+      relations: ['module'],
       order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findForStudent(studentClassId: number) {
+    return this.assignmentRepo.find({
+      where: { class: { id: studentClassId } },
+      relations: ['module'],
+      order: { dueDate: 'ASC' },
     });
   }
 
@@ -71,28 +95,25 @@ export class AssignmentsService {
       },
     });
 
-    const fileLinks = assignment.attachments?.map(
-      (file) =>
-        `📎 ${file.originalName}: http://localhost:3000/files/assignments/${file.fileName}`,
-    ).join('\n');
+    const fileLinks =
+      assignment.attachments?.map(
+        (f) =>
+          `📎 ${f.originalName}: ${process.env.APP_URL}/files/assignments/${f.fileName}`,
+      ).join('\n') || 'No attachments';
 
     await transporter.sendMail({
       from: `"EduBridge" <${process.env.MAIL_USER}>`,
       to: to.join(','),
       subject: `New Assignment: ${assignment.title}`,
       text: `
-New assignment has been posted.
+New assignment posted
 
+Module: ${assignment.module.name}
 Title: ${assignment.title}
-Description: ${assignment.description}
-Due Date: ${assignment.dueDate.toDateString()}
+Due: ${assignment.dueDate.toDateString()}
 
-Attachments:
-${fileLinks || 'No attachments'}
-
-Login to EduBridge for more details.
-    `,
+${fileLinks}
+      `,
     });
   }
-
 }

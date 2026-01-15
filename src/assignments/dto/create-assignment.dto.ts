@@ -1,9 +1,6 @@
-import { IsInt, IsString, IsDateString } from 'class-validator';
+import { IsInt, IsString, IsDateString, IsOptional } from 'class-validator';
 
 export class CreateAssignmentDto {
-  @IsInt()
-  classId: number;
-
   @IsString()
   title: string;
 
@@ -11,5 +8,19 @@ export class CreateAssignmentDto {
   description: string;
 
   @IsDateString()
-  dueDate: string;
+  dueDate: Date;
+
+  @IsInt()
+  moduleId: number;
+
+  @IsInt()
+  classId: number;
+
+  @IsOptional()
+  attachments?: {
+    originalName: string;
+    fileName: string;
+    mimeType: string;
+    size: number;
+  }[];
 }

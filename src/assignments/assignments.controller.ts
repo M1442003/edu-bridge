@@ -1,36 +1,35 @@
 import {
   Controller,
   Post,
-  Param,
   Body,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { assignmentStorage } from './multer.config';
 import { AssignmentsService } from './assignments.service';
+import { assignmentStorage } from './multer.config';
+import { CreateAssignmentDto } from './dto/create-assignment.dto';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '../users/user.entity';
 
 @Controller('assignments')
 export class AssignmentsController {
-  constructor(private readonly service: AssignmentsService) {}
+  constructor(private readonly assignmentsService: AssignmentsService) {}
 
-  @Post(':classId')
+  /**
+   * Lecturer posts assignment to a module & class
+   */
+  @Post()
+  @Roles(UserRole.LECTURER)
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: assignmentStorage,
     }),
   )
   create(
-    @Param('classId') classId: number,
-    @Body() body,
+    @Body() dto: CreateAssignmentDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return this.service.create(
-      classId,
-      body.title,
-      body.description,
-      new Date(body.dueDate),
-      files,
-    );
+    return this.assignmentsService.create(dto, files);
   }
 }

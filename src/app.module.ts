@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
-
+import { APP_GUARD } from '@nestjs/core';
 import { User } from './users/user.entity';
 import { Course } from './courses/course.entity';
 import { Module as CourseModule } from './modules/module.entity';
@@ -10,7 +10,6 @@ import { ClassEntity } from './classes/class.entity';
 import { Announcement } from './announcements/announcements.entity';
 import { Assignment } from './assignments/assignments.entity';
 import { Timetable } from './timetables/timetable.entity';
-
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 import { ModulesModule } from './modules/modules.module';
@@ -19,6 +18,8 @@ import { AnnouncementsModule } from './announcements/announcements.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { AuthModule } from './auth/auth.module';
 import { TimetablesModule } from './timetables/timetables.module';
+import { RolesGuard } from './auth/roles.guard';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { TimetablesModule } from './timetables/timetables.module';
     }),
 
     ScheduleModule.forRoot(),
+
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -55,5 +57,17 @@ import { TimetablesModule } from './timetables/timetables.module';
     TimetablesModule,
     AuthModule,
   ],
+
+ providers: [
+  {
+    provide: APP_GUARD,
+    useClass: JwtAuthGuard,
+  },
+  {
+    provide: APP_GUARD,
+    useClass: RolesGuard,
+  },
+],
+
 })
 export class AppModule {}
