@@ -17,31 +17,51 @@ export class AnnouncementsService {
     private classRepo: Repository<ClassEntity>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
-    private configService: ConfigService, // ConfigService for .env variables
+    private configService: ConfigService,
   ) { }
-
-  async create(dto: CreateAnnouncementDto): Promise<Announcement> {
+  async create(
+    dto: CreateAnnouncementDto,
+    lecturer?: User,
+  ): Promise<Announcement> {
     const classEntity = await this.classRepo.findOne({
       where: { id: dto.classId },
-      relations: ['students'],
+      relations: ['students', 'modules'],
     });
 
-    if (!classEntity) throw new NotFoundException('Class not found');
+    if (!classEntity) {
+      throw new NotFoundException('Class not found');
+    }
+
+    const module = classEntity.modules.find(
+      (m) => m.id === dto.moduleId,
+    );
+
+    if (!module) {
+      throw new NotFoundException(
+        'Module not assigned to this class',
+      );
+    }
 
     const announcement = this.announcementRepo.create({
       title: dto.title,
       content: dto.content,
       class: classEntity,
+      module: module,
     });
+
     await this.announcementRepo.save(announcement);
 
-    const emails = classEntity.students.map((s) => s.email);
+    const emails = classEntity.students
+      .map((s) => s.email)
+      .filter((e) => e && !e.endsWith('@example.com'));
+
     if (emails.length) {
       await this.sendEmail(emails, dto.title, dto.content);
     }
 
     return announcement;
   }
+
 
   async findByClass(classId: number): Promise<Announcement[]> {
     return this.announcementRepo.find({
@@ -61,7 +81,7 @@ export class AnnouncementsService {
           pass: this.configService.get<string>('MAIL_PASS'),
         },
       });
-    
+
 
       await transporter.sendMail({
         from: this.configService.get<string>('MAIL_FROM'),

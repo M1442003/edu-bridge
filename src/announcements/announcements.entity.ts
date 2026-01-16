@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { ClassEntity } from '../classes/class.entity';
 import { Module } from '../modules/module.entity';
-
+import { User } from '../users/user.entity';
 @Entity('announcements')
 export class Announcement {
   @PrimaryGeneratedColumn()
@@ -28,6 +28,10 @@ export class Announcement {
     onDelete: 'CASCADE',
   })
   class: ClassEntity;
+
+  @ManyToOne(() => User, { nullable: true })
+createdBy: User;
+
 
   @CreateDateColumn()
   createdAt: Date;
