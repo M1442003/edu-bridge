@@ -86,7 +86,9 @@ export class AssignmentsService {
 
   private async sendEmail(to: string[], assignment: Assignment) {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: process.env.MAIL_HOST,
+      port: Number(process.env.MAIL_PORT),
+      secure: false,
       auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
