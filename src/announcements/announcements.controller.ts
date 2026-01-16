@@ -1,11 +1,14 @@
 import { Controller, Post, Get, Param, Body, Req } from '@nestjs/common';
 import { AnnouncementsService } from './announcements.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('announcements')
 export class AnnouncementsController {
   constructor(private announcementsService: AnnouncementsService) { }
   @Post()
+  @UseGuards(JwtAuthGuard)
   async create(
     @Body() dto: CreateAnnouncementDto,
     @Req() req,

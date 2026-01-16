@@ -43,6 +43,9 @@ export class Module {
   @OneToMany(() => Assignment, (a) => a.module)
   assignments: Assignment[];
 
+  @ManyToMany(() => User, (user) => user.modules)
+  lecturers: User[];
+
   @OneToMany(() => Announcement, (a) => a.module)
   announcements: Announcement[];
 }

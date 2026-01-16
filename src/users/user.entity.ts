@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne, Column, CreateDateColumn } from 'typeorm';
 import { ClassEntity } from '../classes/class.entity';
 import { Exclude } from 'class-transformer';
+import { Module } from '../modules/module.entity';
 
 export enum UserRole {
   STUDENT = 'STUDENT',
@@ -35,6 +36,11 @@ export class User {
 
   @ManyToOne(() => ClassEntity, (cls) => cls.students, { eager: true, nullable: true })
   class: ClassEntity | null;
+
+@ManyToMany(() => Module, (module) => module.lecturers, { eager: true })
+@JoinTable()
+modules: Module[];
+
 
   @Column({ unique: true })
   regNo: string;

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Announcement } from './announcements.entity';
@@ -13,16 +17,47 @@ export class AnnouncementsService {
   constructor(
     @InjectRepository(Announcement)
     private announcementRepo: Repository<Announcement>,
+
     @InjectRepository(ClassEntity)
     private classRepo: Repository<ClassEntity>,
+
     @InjectRepository(User)
     private userRepo: Repository<User>,
+
     private configService: ConfigService,
   ) { }
+
   async create(
     dto: CreateAnnouncementDto,
-    lecturer?: User,
+    lecturer: User,
   ): Promise<Announcement> {
+
+
+    if (!lecturer || lecturer.role !== 'LECTURER') {
+      throw new ForbiddenException(
+        'Only lecturers can post announcements',
+      );
+    }
+
+    const lecturerEntity = await this.userRepo.findOne({
+      where: { id: lecturer.id },
+      relations: ['modules'],
+    });
+
+    if (!lecturerEntity) {
+      throw new NotFoundException('Lecturer not found');
+    }
+
+    const teachesModule = lecturerEntity.modules.some(
+      (m) => m.id === dto.moduleId,
+    );
+
+    if (!teachesModule) {
+      throw new ForbiddenException(
+        'You do not teach this module',
+      );
+    }
+
     const classEntity = await this.classRepo.findOne({
       where: { id: dto.classId },
       relations: ['students', 'modules'],
@@ -37,7 +72,7 @@ export class AnnouncementsService {
     );
 
     if (!module) {
-      throw new NotFoundException(
+      throw new ForbiddenException(
         'Module not assigned to this class',
       );
     }
@@ -62,15 +97,19 @@ export class AnnouncementsService {
     return announcement;
   }
 
-
   async findByClass(classId: number): Promise<Announcement[]> {
     return this.announcementRepo.find({
       where: { class: { id: classId } },
+      relations: ['module'],
       order: { createdAt: 'DESC' },
     });
   }
 
-  private async sendEmail(to: string[], subject: string, text: string) {
+  private async sendEmail(
+    to: string[],
+    subject: string,
+    text: string,
+  ) {
     try {
       const transporter = nodemailer.createTransport({
         host: this.configService.get<string>('MAIL_HOST'),
@@ -81,7 +120,6 @@ export class AnnouncementsService {
           pass: this.configService.get<string>('MAIL_PASS'),
         },
       });
-
 
       await transporter.sendMail({
         from: this.configService.get<string>('MAIL_FROM'),
