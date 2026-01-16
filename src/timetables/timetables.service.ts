@@ -21,35 +21,28 @@ export class TimetablesService {
         private classRepo: Repository<ClassEntity>,
     ) { }
 
-    async create(body: {
-        lecturerId: number;
-        classId: number;
-        dayOfWeek: number;
-        startTime: string;
-        endTime: string;
-        venue: string;
-    }) {
-        const lecturer = await this.userRepo.findOne({
-            where: { id: body.lecturerId },
-        });
+async create(body: {
+  lecturerId: number;
+  classId: number;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  venue: string;
+}) {
+  const lecturer = await this.userRepo.findOne({ where: { id: body.lecturerId } });
+  const cls = await this.classRepo.findOne({ where: { id: body.classId } });
 
-        const cls = await this.classRepo.findOne({
-            where: { id: body.classId },
-        });
+  if (!lecturer || !cls) throw new Error('Lecturer or Class not found');
 
-        if (!lecturer || !cls) {
-            throw new Error('Lecturer or Class not found');
-        }
+  const timetable = this.timetableRepo.create({
+    lecturer,
+    class: cls,
+    dayOfWeek: body.dayOfWeek,
+    startTime: body.startTime,
+    endTime: body.endTime,
+    venue: body.venue,
+  });
 
-        const timetable = this.timetableRepo.create({
-            lecturer,
-            class: cls,
-            dayOfWeek: body.dayOfWeek,
-            startTime: body.startTime,
-            endTime: body.endTime,
-            venue: body.venue,
-        });
-
-        return this.timetableRepo.save(timetable);
-    }
+  return this.timetableRepo.save(timetable);
+}
 }
