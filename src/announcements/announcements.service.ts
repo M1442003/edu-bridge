@@ -124,10 +124,32 @@ export class AnnouncementsService {
         from: this.configService.get<string>('MAIL_FROM'),
         to: to.join(','),
         subject,
-        text,
+        html: `
+    <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+      <h2 style="color: #1883ee;">${subject}</h2>
+      <p>${text}</p>
+      <hr />
+      <p style="font-size: 12px; color: #0bf21a;">
+        EduBridge Notifications – Please do not reply to this email.
+      </p>
+    </div>
+  `,
       });
+
+
     } catch (error) {
-      console.error('Error sending emails:', error);
+      console.error('Error sending email:', error);
+    }
+
+    const retries = 3;
+    for (let i = 1; i <= retries; i++) {
+      try {   
+   console.log(`Email sent successfully on attempt ${i}`);
+      break;
+    } catch (error) {
+      console.error(`Attempt ${i} failed:`, error);
+      if (i === retries) throw new Error('All email retries failed');
+      await new Promise((res) => setTimeout(res, 2000));
     }
   }
-}
+}}
