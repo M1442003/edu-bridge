@@ -53,10 +53,9 @@ export class AnnouncementsService {
     );
 
     if (!teachesModule) {
-      throw new ForbiddenException(
-        'You do not teach this module',
-      );
+      throw new ForbiddenException('You do not teach this module');
     }
+
 
     const classEntity = await this.classRepo.findOne({
       where: { id: dto.classId },
