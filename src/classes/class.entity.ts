@@ -32,9 +32,14 @@ export class ClassEntity {
   students: User[];
 
 
-  @ManyToMany(() => CourseModule, { eager: true })
-  @JoinTable()
+  @ManyToMany(() => CourseModule, (module) => module.classes, { eager: true })
+  @JoinTable({
+    name: 'class_entity_modules_modules',
+    joinColumn: { name: 'classEntityId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'modulesId', referencedColumnName: 'id' },
+  })
   modules: CourseModule[];
+
 
   @OneToMany(() => Announcement, (announcement) => announcement.class)
   announcements: Announcement[];
