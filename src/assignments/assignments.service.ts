@@ -50,7 +50,7 @@ export class AssignmentsService {
     const assignment = this.assignmentRepo.create({
       title: dto.title,
       description: dto.description,
-      dueDate: dto.dueDate,
+      dueDate: new Date(dto.dueDate),
       class: cls,
       module,
       attachments,
@@ -93,6 +93,8 @@ export class AssignmentsService {
       },
     });
 
+    const dueDate = new Date(assignment.dueDate);
+
     const fileLinks =
       assignment.attachments?.map(
         (f) =>
@@ -108,10 +110,10 @@ New assignment posted
 
 Module: ${assignment.module.name}
 Title: ${assignment.title}
-Due: ${assignment.dueDate.toDateString()}
+Due: ${dueDate.toDateString()}
 
 ${fileLinks}
-      `,
+    `,
     });
   }
 }
