@@ -61,6 +61,7 @@ export class AnnouncementsService {
           pass: this.configService.get<string>('MAIL_PASS'),
         },
       });
+    
 
       await transporter.sendMail({
         from: this.configService.get<string>('MAIL_FROM'),
