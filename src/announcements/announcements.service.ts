@@ -129,7 +129,7 @@ export class AnnouncementsService {
       <h2 style="color: #1883ee;">${subject}</h2>
       <p>${text}</p>
       <hr />
-      <p style="font-size: 12px; color: #0bf21a;">
+      <p style="font-size: 12px; color: #f2630b;">
         EduBridge Notifications – Please do not reply to this email.
       </p>
     </div>
