@@ -1,20 +1,25 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards, Request } from '@nestjs/common';
 import { ModulesService } from './modules.service';
 import { CreateModuleDto } from './dto/module.dto';
-import { Semester } from '../common/enums/semester.enum';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('modules')
 export class ModulesController {
   constructor(private readonly modulesService: ModulesService) {}
 
   @Post()
-  create(@Body() dto: CreateModuleDto) {
+  create(@Body() createModuleDto: { name: string; courseId: number; semester: string; year: number }) {
     return this.modulesService.create(
-      dto.name,
-      dto.courseId,
-      dto.semester as Semester,
-      dto.year,
+      createModuleDto.name,
+      createModuleDto.courseId,
+      createModuleDto.semester as any,
+      createModuleDto.year,
     );
+  }
+
+  @Post('bulk')
+  createBulk(@Body() body: { modules: CreateModuleDto[] }) {
+    return this.modulesService.createBulk(body.modules);
   }
 
   @Get()
@@ -24,11 +29,24 @@ export class ModulesController {
 
   @Get('course/:courseId')
   findByCourse(@Param('courseId') courseId: string) {
-    return this.modulesService.findByCourse(Number(courseId));
+    return this.modulesService.findByCourse(parseInt(courseId));
   }
 
-  @Post('bulk')
-  async createBulk(@Body() modules: CreateModuleDto[]) {
-    return this.modulesService.createBulk(modules);
+  @Get('student')
+  @UseGuards(AuthGuard('jwt'))
+  async getStudentModules(@Request() req) {
+    // This endpoint can be used if you don't have it in users service
+    return [];
+  }
+
+  @Get(':id')
+  findById(@Param('id') id: string) {
+    return this.modulesService.findById(parseInt(id));
+  }
+
+  @Get(':id/stats')
+  @UseGuards(AuthGuard('jwt'))
+  getModuleStats(@Param('id') id: string) {
+    return this.modulesService.getModuleStats(parseInt(id));
   }
 }

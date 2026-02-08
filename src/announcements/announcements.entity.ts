@@ -1,13 +1,7 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  Column,
-  ManyToOne,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn } from 'typeorm';
 import { ClassEntity } from '../classes/class.entity';
 import { Module } from '../modules/module.entity';
-import { User } from '../users/user.entity';
+
 @Entity('announcements')
 export class Announcement {
   @PrimaryGeneratedColumn()
@@ -19,20 +13,15 @@ export class Announcement {
   @Column('text')
   content: string;
 
-  @ManyToOne(() => Module, (module) => module.announcements, {
-    onDelete: 'CASCADE',
-  })
-  module: Module;
-
-  @ManyToOne(() => ClassEntity, (classEntity) => classEntity.announcements, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => ClassEntity, cls => cls.announcements)
   class: ClassEntity;
 
-  @ManyToOne(() => User, { nullable: true })
-createdBy: User;
-
+  @ManyToOne(() => Module, module => module.announcements)
+  module: Module;
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

@@ -1,6 +1,6 @@
-import { IsEmail, IsString, MinLength, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 
-export class RegisterDto {
+export class BulkRegisterDto {
   @IsString()
   @MinLength(2)
   name: string;

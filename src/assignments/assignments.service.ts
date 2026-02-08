@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Assignment } from './assignments.entity';
@@ -6,9 +6,10 @@ import { ClassEntity } from '../classes/class.entity';
 import * as nodemailer from 'nodemailer';
 import { Module } from '../modules/module.entity';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class AssignmentsService {
+export default class AssignmentsService {
   constructor(
     @InjectRepository(Assignment)
     private assignmentRepo: Repository<Assignment>,
@@ -18,7 +19,9 @@ export class AssignmentsService {
 
     @InjectRepository(ClassEntity)
     private classRepo: Repository<ClassEntity>,
-  ) { }
+
+    private configService: ConfigService, // REMOVE UserRepository if not needed
+  ) {}
 
   async create(
     dto: CreateAssignmentDto,
@@ -76,38 +79,80 @@ export class AssignmentsService {
     });
   }
 
-  async findForStudent(studentClassId: number) {
+  async findForStudent(classId: number) {
     return this.assignmentRepo.find({
-      where: { class: { id: studentClassId } },
+      where: { class: { id: classId } },
       relations: ['module'],
       order: { dueDate: 'ASC' },
     });
   }
 
-  private async sendEmail(to: string[], assignment: Assignment) {
-    const transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST,
-      port: Number(process.env.MAIL_PORT),
-      secure: false,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
+  async findById(id: number) {
+    const assignment = await this.assignmentRepo.findOne({
+      where: { id },
+      relations: ['module', 'class', 'class.students'],
     });
+    if (!assignment) throw new NotFoundException('Assignment not found');
+    return assignment;
+  }
 
-    const dueDate = new Date(assignment.dueDate);
+  async getUpcomingAssignments(classId: number, limit: number = 5) {
+    const now = new Date();
+    return this.assignmentRepo.find({
+      where: { 
+        class: { id: classId },
+        dueDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // Next 7 days
+      },
+      relations: ['module'],
+      order: { dueDate: 'ASC' },
+      take: limit,
+    });
+  }
 
-    const fileLinks =
-      assignment.attachments?.map(
-        (f) =>
-          `📎 ${f.originalName}: ${process.env.APP_URL}/files/assignments/${f.fileName}`,
-      ).join('\n') || 'No attachments';
+  async findAll() {
+    return this.assignmentRepo.find({
+      relations: ['module', 'class'],
+      order: { createdAt: 'DESC' },
+    });
+  }
 
-    await transporter.sendMail({
-      from: `"EduBridge" <${process.env.MAIL_USER}>`,
-      to: to.join(','),
-      subject: `New Assignment: ${assignment.title}`,
-      text: `
+  async update(id: number, dto: Partial<CreateAssignmentDto>) {
+    const assignment = await this.findById(id);
+    Object.assign(assignment, dto);
+    if (dto.dueDate) assignment.dueDate = new Date(dto.dueDate);
+    return this.assignmentRepo.save(assignment);
+  }
+
+  async delete(id: number) {
+    const result = await this.assignmentRepo.delete(id);
+    if (result.affected === 0) throw new NotFoundException('Assignment not found');
+  }
+
+  private async sendEmail(to: string[], assignment: Assignment) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: this.configService.get<string>('MAIL_HOST'),
+        port: Number(this.configService.get<string>('MAIL_PORT')),
+        secure: false,
+        auth: {
+          user: this.configService.get<string>('MAIL_USER'),
+          pass: this.configService.get<string>('MAIL_PASS'),
+        },
+      });
+
+      const dueDate = new Date(assignment.dueDate);
+
+      const fileLinks =
+        assignment.attachments?.map(
+          (f) =>
+            `📎 ${f.originalName}: ${this.configService.get<string>('APP_URL')}/files/assignments/${f.fileName}`,
+        ).join('\n') || 'No attachments';
+
+      await transporter.sendMail({
+        from: `"EduBridge" <${this.configService.get<string>('MAIL_FROM')}>`,
+        to: to.join(','),
+        subject: `New Assignment: ${assignment.title}`,
+        text: `
 New assignment posted
 
 Module: ${assignment.module.name}
@@ -115,7 +160,10 @@ Title: ${assignment.title}
 Due: ${dueDate.toDateString()}
 
 ${fileLinks}
-    `,
-    });
+        `,
+      });
+    } catch (error) {
+      console.error('Failed to send email:', error);
+    }
   }
 }

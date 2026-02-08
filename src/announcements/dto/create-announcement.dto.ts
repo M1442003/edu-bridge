@@ -1,17 +1,19 @@
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, MinLength } from 'class-validator';
 
 export class CreateAnnouncementDto {
   @IsString()
   @IsNotEmpty()
+  @MinLength(3)
   title: string;
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(10)
   content: string;
 
-  @IsInt()
-  classId: number;
-
-  @IsInt()
+  @IsNumber()
   moduleId: number;
+
+  @IsNumber()
+  classId: number;
 }

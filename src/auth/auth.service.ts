@@ -2,12 +2,13 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 import { User, UserRole } from '../users/user.entity';
 import { Course } from '../courses/course.entity';
 import { ClassEntity } from '../classes/class.entity';
+import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { JwtService } from '@nestjs/jwt';
-
+import { BulkRegisterDto } from './dto/bulk-register.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +23,7 @@ export class AuthService {
     private classRepo: Repository<ClassEntity>,
 
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   async register(dto: RegisterDto) {
     const existing = await this.userRepo.findOne({ where: { email: dto.email } });
@@ -51,14 +52,14 @@ export class AuthService {
     return this.userRepo.save(student);
   }
 
-  async registerBulk(users: RegisterDto[]) {
-    if (!Array.isArray(users) || users.length === 0) {
+  async registerBulk(dtos: BulkRegisterDto[]) {
+    if (!Array.isArray(dtos) || dtos.length === 0) {
       throw new BadRequestException('Users array is required');
     }
 
     const results: { email: string; success: boolean; id?: number; reason?: string }[] = [];
 
-    for (const dto of users) {
+    for (const dto of dtos) {
       try {
         const student = await this.register(dto);
         results.push({ email: dto.email, success: true, id: student.id });
@@ -70,7 +71,7 @@ export class AuthService {
     return { message: `${results.length} users processed`, results };
   }
 
-  async registerLecturer(dto: RegisterDto) {
+  async registerLecturer(dto: Omit<RegisterDto, 'courseCode' | 'year'>) {
     const existing = await this.userRepo.findOne({ where: { email: dto.email } });
     if (existing) {
       throw new BadRequestException('User already exists');
@@ -88,15 +89,15 @@ export class AuthService {
     return this.userRepo.save(lecturer);
   }
 
-
-  async login(email: string, password: string) {
+  async login(dto: LoginDto) {
     const user = await this.userRepo.findOne({
-      where: { email },
+      where: { email: dto.email },
       relations: {
         class: {
           course: true,
           modules: true,
         },
+        modules: true,
       },
     });
 
@@ -104,12 +105,18 @@ export class AuthService {
       throw new BadRequestException('Invalid credentials');
     }
 
-    const match = await bcrypt.compare(password, user.password);
+    const match = await bcrypt.compare(dto.password, user.password);
     if (!match) {
       throw new BadRequestException('Invalid credentials');
     }
 
-    const payload = { sub: user.id, role: user.role };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      classId: user.class?.id,
+    };
+
     const token = this.jwtService.sign(payload);
 
     return {
@@ -123,10 +130,13 @@ export class AuthService {
         createdAt: user.createdAt,
         courseCode: user.class?.course?.code ?? null,
         year: user.class?.year ?? null,
-        class: user.class,
+        class: user.class ? {
+          id: user.class.id,
+          name: `${user.class.course?.code}-${user.class.year}`,
+          course: user.class.course,
+        } : null,
+        modules: user.modules,
       },
     };
   }
-
-
 }

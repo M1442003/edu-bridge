@@ -26,6 +26,7 @@ export class Module {
   @Column()
   year: number;
 
+
   @Column({
     type: 'enum',
     enum: Semester,
@@ -36,6 +37,9 @@ export class Module {
     onDelete: 'CASCADE',
   })
   course: Course;
+
+  @Column({ nullable: true, type: 'text' })
+  description: string;
 
   @ManyToMany(() => ClassEntity, (cls) => cls.modules)
   classes: ClassEntity[];
