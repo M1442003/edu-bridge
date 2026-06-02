@@ -1,22 +1,31 @@
-import { IsEmail, IsNotEmpty, MinLength, IsNumber, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsEnum, IsOptional, IsString } from 'class-validator';
+import { UserRole } from '../../users/user.entity';
 
 export class CreateUserDto {
   @IsNotEmpty()
+  @IsString()
   name: string;
-
-  @IsNotEmpty()
-  @Matches(/^\d{13}$/)
-  regNo: string;
 
   @IsEmail()
   email: string;
 
-  @MinLength(6)
-  password: string;
-
   @IsNotEmpty()
-  courseCode: string;
+  @IsString()
+  regNo: string;
 
-  @IsNumber()
-  year: number;
+  @IsEnum(UserRole)
+  role: UserRole;
+
+  @IsOptional()
+  @IsString()
+  courseCode?: string;
+
+  @IsOptional()
+  year?: number;
+
+  @IsOptional()
+  classId?: number;
+
+  @IsOptional()
+  moduleIds?: number[];
 }

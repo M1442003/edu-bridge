@@ -26,6 +26,7 @@ export class Module {
   @Column()
   year: number;
 
+
   @Column({
     type: 'enum',
     enum: Semester,
@@ -37,11 +38,17 @@ export class Module {
   })
   course: Course;
 
+  @Column({ nullable: true, type: 'text' })
+  description: string;
+
   @ManyToMany(() => ClassEntity, (cls) => cls.modules)
   classes: ClassEntity[];
 
   @OneToMany(() => Assignment, (a) => a.module)
   assignments: Assignment[];
+
+  @ManyToMany(() => User, (user) => user.modules)
+  lecturers: User[];
 
   @OneToMany(() => Announcement, (a) => a.module)
   announcements: Announcement[];

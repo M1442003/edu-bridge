@@ -16,12 +16,13 @@ export class ModulesService {
     private courseRepo: Repository<Course>,
   ) { }
 
-  async create(name: string, courseId: number, semester: Semester, year: number) {
+  async create(name: string, courseId: number, semester: Semester, year: number, code?: string) {
     const course = await this.courseRepo.findOne({ where: { id: courseId } });
     if (!course) throw new NotFoundException('Course not found');
 
     const module = this.moduleRepo.create({
       name,
+      code: code || name.substring(0, 6).toUpperCase(),
       course,
       semester,
       year,
@@ -56,7 +57,7 @@ export class ModulesService {
   }
 
   findAll() {
-    return this.moduleRepo.find({ relations: ['course'] });
+    return this.moduleRepo.find({ relations: ['course', 'lecturers'] });
   }
 
   async findByCourse(courseId: number) {
@@ -65,7 +66,29 @@ export class ModulesService {
 
     return this.moduleRepo.find({
       where: { course: { id: courseId } },
-      relations: ['course'],
+      relations: ['course', 'lecturers'],
     });
+  }
+
+  async findById(id: number) {
+    const module = await this.moduleRepo.findOne({
+      where: { id },
+      relations: ['course', 'lecturers', 'announcements', 'assignments'],
+    });
+    if (!module) throw new NotFoundException('Module not found');
+    return module;
+  }
+
+  async getModuleStats(moduleId: number) {
+    const module = await this.findById(moduleId);
+    // Calculate stats
+    const newsCount = module.announcements?.length || 0;
+    const tasksCount = module.assignments?.length || 0;
+
+    return {
+      ...module,
+      newsCount,
+      tasksCount,
+    };
   }
 }

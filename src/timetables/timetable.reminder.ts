@@ -4,14 +4,24 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Timetable } from './timetable.entity';
 import * as nodemailer from 'nodemailer';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class TimetableReminder {
   constructor(
     @InjectRepository(Timetable)
     private timetableRepo: Repository<Timetable>,
-  ) {}
+  ) {
+    this.transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
 
+  }
+  private transporter: nodemailer.Transporter;
 
   @Cron('* * * * *')
   async remindLecturer() {
@@ -32,7 +42,6 @@ export class TimetableReminder {
 
       if (lessonMinutes - nowMinutes === 10) {
         await this.sendEmail(lesson);
-
         lesson.reminderSent = true;
         await this.timetableRepo.save(lesson);
       }
@@ -52,7 +61,6 @@ export class TimetableReminder {
         pass: process.env.MAIL_PASS,
       },
     });
-
     await transporter.sendMail({
       to: lesson.lecturer.email,
       subject: '⏰ Class Reminder',
