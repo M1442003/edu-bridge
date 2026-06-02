@@ -14,9 +14,9 @@ export class CreateUserDto {
   @MinLength(6)
   password: string;
 
-  @IsEnum(UserRole)
+  @IsEnum([UserRole.STUDENT, UserRole.LECTURER])
   @IsNotEmpty()
-  role: UserRole.STUDENT | UserRole.LECTURER; // 👈 admin can't create another admin
+  role: UserRole.STUDENT | UserRole.LECTURER;
 
   @IsOptional()
   @IsString()

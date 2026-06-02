@@ -14,14 +14,14 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar' })
   name: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   email: string;
 
   @Exclude()
-  @Column()
+  @Column({ type: 'varchar' })
   password: string;
 
   @Column({
@@ -31,24 +31,25 @@ export class User {
   })
   role: UserRole;
 
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
   @ManyToOne(() => ClassEntity, (cls) => cls.students, { eager: true, nullable: true })
   class: ClassEntity | null;
 
-@ManyToMany(() => Module, (module) => module.lecturers, { eager: true })
-@JoinTable()
-modules: Module[];
+  @ManyToMany(() => Module, (module) => module.lecturers, { eager: true })
+  @JoinTable()
+  modules: Module[];
 
-
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true, nullable: true })
   regNo: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   courseCode: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   year: number;
-
 }

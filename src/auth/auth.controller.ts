@@ -1,9 +1,11 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
+import { CreateUserDto as RegisterDto } from './dto/register.dto';
 import { BulkRegisterDto } from './dto/bulk-register.dto';
+import { Public } from './public.decorator';  
 
+@Public()
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

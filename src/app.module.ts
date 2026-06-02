@@ -20,6 +20,7 @@ import { AuthModule } from './auth/auth.module';
 import { TimetablesModule } from './timetables/timetables.module';
 import { RolesGuard } from './auth/roles.guard';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
     AssignmentsModule,
     TimetablesModule,
     AuthModule,
+    AdminModule,
   ],
 
  providers: [

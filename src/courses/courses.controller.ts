@@ -1,7 +1,9 @@
 import { Controller, Post, Body, Get } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CourseLevel } from './course.entity';
+import { Public } from '../auth/public.decorator';
 
+@Public()
 @Controller('courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}

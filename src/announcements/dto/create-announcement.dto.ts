@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, MinLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, MinLength, IsOptional, IsArray } from 'class-validator';
 
 export class CreateAnnouncementDto {
   @IsString()
@@ -14,6 +14,15 @@ export class CreateAnnouncementDto {
   @IsNumber()
   moduleId: number;
 
+  @IsOptional()
   @IsNumber()
-  classId: number;
+  classId?: number;
+
+  @IsOptional()
+  @IsArray()
+  classIds?: number[];
+
+  @IsOptional()
+  @IsString()
+  priority?: string;
 }

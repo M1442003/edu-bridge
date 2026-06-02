@@ -27,10 +27,7 @@ export default class AnnouncementsService {
     private configService: ConfigService,
   ) {}
 
-  async create(
-    dto: CreateAnnouncementDto,
-    lecturer: User,
-  ): Promise<Announcement> {
+  async create(dto: CreateAnnouncementDto, lecturer: User): Promise<any> {
     if (!lecturer || lecturer.role !== 'LECTURER') {
       throw new ForbiddenException('Only lecturers can post announcements');
     }
@@ -40,9 +37,7 @@ export default class AnnouncementsService {
       relations: ['modules'],
     });
 
-    if (!lecturerEntity) {
-      throw new NotFoundException('Lecturer not found');
-    }
+    if (!lecturerEntity) throw new NotFoundException('Lecturer not found');
 
     const teachesModule = lecturerEntity.modules.some(
       (m) => m.id === dto.moduleId,
@@ -52,42 +47,70 @@ export default class AnnouncementsService {
       throw new ForbiddenException('You do not teach this module');
     }
 
-    const classEntity = await this.classRepo.findOne({
-      where: { id: dto.classId },
-      relations: ['students', 'modules'],
-    });
+    // Support both classId (single) and classIds (multiple)
+    const classIds = dto.classIds?.length
+      ? dto.classIds
+      : dto.classId
+      ? [dto.classId]
+      : [];
 
-    if (!classEntity) {
-      throw new NotFoundException('Class not found');
+    if (classIds.length === 0) {
+      throw new NotFoundException('No class selected');
     }
 
-    const module = classEntity.modules.find(
-      (m) => m.id === dto.moduleId,
-    );
+    const results: Announcement[] = [];
+    const skipped: { classId: number; reason: string }[] = [];
 
-    if (!module) {
-      throw new ForbiddenException('Module not assigned to this class');
+    for (const classId of classIds) {
+      const classEntity = await this.classRepo.findOne({
+        where: { id: classId },
+        relations: ['students', 'modules'],
+      });
+
+      if (!classEntity) {
+        skipped.push({ classId, reason: 'Class not found' });
+        continue;
+      }
+
+      const module = classEntity.modules.find((m) => m.id === dto.moduleId);
+
+      if (!module) {
+        skipped.push({ classId, reason: 'Module not assigned to this class' });
+        continue;
+      }
+
+      const announcement = this.announcementRepo.create({
+        title: dto.title,
+        content: dto.content,
+        class: classEntity,
+        module,
+      });
+
+      await this.announcementRepo.save(announcement);
+      results.push(announcement);
+
+      // Send email notifications to students
+      const emails = classEntity.students
+        .map((s) => s.email)
+        .filter((e) => e && !e.endsWith('@example.com'));
+
+      if (emails.length) {
+        await this.sendEmail(emails, dto.title, dto.content);
+      }
     }
 
-    const announcement = this.announcementRepo.create({
-      title: dto.title,
-      content: dto.content,
-      class: classEntity,
-      module: module,
-    });
-
-    await this.announcementRepo.save(announcement);
-
-    // Send email notifications to students
-    const emails = classEntity.students
-      .map((s) => s.email)
-      .filter((e) => e && !e.endsWith('@example.com'));
-
-    if (emails.length) {
-      await this.sendEmail(emails, dto.title, dto.content);
+    if (results.length === 0) {
+      throw new ForbiddenException(
+        `Could not post to any class. Reasons: ${skipped.map(s => s.reason).join(', ')}`,
+      );
     }
 
-    return announcement;
+    return {
+      message: `${results.length} announcement(s) posted successfully`,
+      posted: results.length,
+      skipped: skipped.length,
+      results,
+    };
   }
 
   async findByClass(classId: number): Promise<Announcement[]> {
@@ -106,7 +129,10 @@ export default class AnnouncementsService {
     });
   }
 
-  async getRecentAnnouncements(classId: number, limit: number = 5): Promise<Announcement[]> {
+  async getRecentAnnouncements(
+    classId: number,
+    limit: number = 5,
+  ): Promise<Announcement[]> {
     return this.announcementRepo.find({
       where: { class: { id: classId } },
       relations: ['module', 'class'],
@@ -120,11 +146,9 @@ export default class AnnouncementsService {
       where: { id },
       relations: ['module', 'class'],
     });
-    
-    if (!announcement) {
-      throw new NotFoundException('Announcement not found');
-    }
-    
+
+    if (!announcement) throw new NotFoundException('Announcement not found');
+
     return announcement;
   }
 
@@ -144,16 +168,17 @@ export default class AnnouncementsService {
     });
   }
 
-  async update(id: number, dto: Partial<CreateAnnouncementDto>): Promise<Announcement> {
+  async update(
+    id: number,
+    dto: Partial<CreateAnnouncementDto>,
+  ): Promise<Announcement> {
     const announcement = await this.findById(id);
-    
     Object.assign(announcement, dto);
     return this.announcementRepo.save(announcement);
   }
 
   async delete(id: number): Promise<void> {
     const result = await this.announcementRepo.delete(id);
-    
     if (result.affected === 0) {
       throw new NotFoundException('Announcement not found');
     }
@@ -165,7 +190,7 @@ export default class AnnouncementsService {
     text: string,
   ): Promise<void> {
     const retries = 3;
-    
+
     for (let i = 1; i <= retries; i++) {
       try {
         const transporter = nodemailer.createTransport({
@@ -199,18 +224,17 @@ export default class AnnouncementsService {
               </div>
               <div style="background: #f1f1f1; padding: 15px; text-align: center; font-size: 12px; color: #888;">
                 <p>© ${new Date().getFullYear()} EduBridge. All rights reserved.</p>
-                <p>If you wish to unsubscribe from these notifications, please update your preferences in your account settings.</p>
               </div>
             </div>
           `,
         });
 
-        console.log(`Email sent successfully to ${to.length} students on attempt ${i}`);
+        console.log(`Email sent to ${to.length} students on attempt ${i}`);
         break;
       } catch (error) {
-        console.error(`Attempt ${i} failed to send email:`, error);
+        console.error(`Attempt ${i} failed:`, error);
         if (i === retries) {
-          console.error('All email retries failed. Continuing without email notification.');
+          console.error('All email retries failed. Continuing without email.');
         }
         await new Promise((res) => setTimeout(res, 2000));
       }

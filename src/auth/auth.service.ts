@@ -7,7 +7,7 @@ import { User, UserRole } from '../users/user.entity';
 import { Course } from '../courses/course.entity';
 import { ClassEntity } from '../classes/class.entity';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
+import { CreateUserDto as RegisterDto } from './dto/register.dto';
 import { BulkRegisterDto } from './dto/bulk-register.dto';
 
 @Injectable()
@@ -23,7 +23,7 @@ export class AuthService {
     private classRepo: Repository<ClassEntity>,
 
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterDto) {
     const existing = await this.userRepo.findOne({ where: { email: dto.email } });
@@ -61,8 +61,41 @@ export class AuthService {
 
     for (const dto of dtos) {
       try {
-        const student = await this.register(dto);
-        results.push({ email: dto.email, success: true, id: student.id });
+        const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+        if (existing) {
+          results.push({ email: dto.email, success: false, reason: 'User already exists' });
+          continue;
+        }
+
+        const course = dto.courseCode
+          ? await this.courseRepo.findOne({ where: { code: dto.courseCode } })
+          : null;
+        if (dto.courseCode && !course) {
+          results.push({ email: dto.email, success: false, reason: 'Course not found' });
+          continue;
+        }
+        const cls = dto.courseCode && dto.year && course  // 👈 add && course
+          ? await this.classRepo.findOne({
+            where: { course: { id: course.id }, year: dto.year },
+            relations: ['modules'],
+          })
+          : null;
+        if (dto.courseCode && dto.year && !cls) {
+          results.push({ email: dto.email, success: false, reason: 'Class not found for this course/year' });
+          continue;
+        }
+
+        const user = this.userRepo.create({
+          name: dto.name,
+          regNo: dto.regNo,
+          email: dto.email,
+          password: await bcrypt.hash(dto.password, 10),
+          role: UserRole.STUDENT,
+          class: cls,
+        });
+
+        const saved = await this.userRepo.save(user);
+        results.push({ email: dto.email, success: true, id: saved.id });
       } catch (error: any) {
         results.push({ email: dto.email, success: false, reason: error.message });
       }
