@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, Patch, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -41,6 +41,20 @@ export class AdminController {
     @Delete('users/:id')
     deactivateUser(@Param('id') id: string) {
         return this.adminService.deactivateUser(id);
+    }
+    @Delete('users/:id/delete')
+    deleteUser(@Param('id') id: string) {
+        return this.adminService.deleteUser(id);
+    }
+
+    @Patch('users/:id')
+    updateUser(@Param('id') id: string, @Body() dto: Partial<CreateUserDto>) {
+        return this.adminService.updateUser(id, dto);
+    }
+
+    @Patch('users/:id/reactivate')
+    reactivateUser(@Param('id') id: string) {
+        return this.adminService.reactivateUser(id);
     }
 
     @Post('assign')

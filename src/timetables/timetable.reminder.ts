@@ -73,7 +73,7 @@ Class: ${lesson.class.name}
 Venue: ${lesson.venue}
 Time: ${lesson.startTime} - ${lesson.endTime}
 
-EduBridge Reminder System
+SmartCR Reminder System
       `,
     });
   }

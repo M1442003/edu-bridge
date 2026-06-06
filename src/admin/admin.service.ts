@@ -141,6 +141,35 @@ export class AdminService {
         return { message: `${results.length} users processed`, results };
     }
 
+    // Delete user permanently
+    async deleteUser(id: string) {
+        const user = await this.userRepo.findOne({ where: { id: parseInt(id) } });
+        if (!user) throw new NotFoundException('User not found');
+        await this.userRepo.remove(user);
+        return { message: 'User deleted successfully' };
+    }
+
+    // Update user
+    async updateUser(id: string, dto: Partial<CreateUserDto>) {
+        const user = await this.userRepo.findOne({ where: { id: parseInt(id) } });
+        if (!user) throw new NotFoundException('User not found');
+
+        if (dto.name) user.name = dto.name;
+        if (dto.email) user.email = dto.email;
+        if (dto.regNo) user.regNo = dto.regNo;
+        if (dto.password) user.password = await bcrypt.hash(dto.password, 10);
+
+        return this.userRepo.save(user);
+    }
+
+    // Reactivate user
+    async reactivateUser(id: string) {
+        const user = await this.userRepo.findOne({ where: { id: parseInt(id) } });
+        if (!user) throw new NotFoundException('User not found');
+        user.isActive = true;
+        return this.userRepo.save(user);
+    }
+
     // Get all users
     async getAllUsers() {
         return this.userRepo.find({
