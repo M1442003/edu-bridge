@@ -5,32 +5,32 @@ import { ClassEntity } from '../classes/class.entity';
 @Entity()
 export class Timetable {
     @PrimaryGeneratedColumn()
-    id: number;
+    id!: number;
 
     @ManyToOne(() => User, { eager: true })
-    lecturer: User;
+    lecturer!: User;
 
     @ManyToOne(() => ClassEntity, { eager: true })
-    class: ClassEntity;
+    class!: ClassEntity;
 
     @Column()
-    dayOfWeek: number;
+    dayOfWeek!: number;
 
     @Column({ type: 'time' })
-    startTime: string;
+    startTime!: string;
 
     @Column({ type: 'time' })
-    endTime: string;
+    endTime!: string;
 
     @Column({ default: false })
-    reminderSent: boolean;
+    reminderSent!: boolean;
 
     @Column()
-    venue: string;
+    venue!: string;
 
     @CreateDateColumn()
-    createdAt: Date;
+    createdAt!: Date;
 
     @UpdateDateColumn()
-    updatedAt: Date;
+    updatedAt!: Date;
 }
