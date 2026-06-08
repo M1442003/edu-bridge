@@ -4,15 +4,15 @@ export class CreateAnnouncementDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
-  title: string;
+  title!: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(10)
-  content: string;
+  content!: string;
 
   @IsNumber()
-  moduleId: number;
+  moduleId!: number;
 
   @IsOptional()
   @IsNumber()
