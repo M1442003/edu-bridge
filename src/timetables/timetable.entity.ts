@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../users/user.entity';
 import { ClassEntity } from '../classes/class.entity';
+import { Module as ModuleEntity } from '../modules/module.entity';
 
 @Entity()
 export class Timetable {
@@ -25,8 +26,11 @@ export class Timetable {
     @Column({ default: false })
     reminderSent!: boolean;
 
-    @Column()
+    @Column({ default: 'TBD' })
     venue!: string;
+
+    @ManyToOne(() => ModuleEntity, { eager: true, nullable: true })
+    module?: ModuleEntity;
 
     @CreateDateColumn()
     createdAt!: Date;

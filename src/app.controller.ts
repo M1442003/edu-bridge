@@ -4,7 +4,7 @@ import { Controller, Get } from '@nestjs/common';
 export class AppController {
   @Get()
   getHello(): string {
-    return 'EduBridge API is running!';
+    return 'SmartCR API is running!';
   }
 
   @Get('health')

@@ -1,11 +1,10 @@
 import { Controller, Post, Get, Body, Param, Delete, Patch, UseGuards, Request } from '@nestjs/common';
 import { TimetablesService } from './timetables.service';
 import { AuthGuard } from '@nestjs/passport';
-import { Public } from '../auth/public.decorator';
 
 @Controller('timetables')
 export class TimetablesController {
-  constructor(private readonly service: TimetablesService) {}
+  constructor(private readonly service: TimetablesService) { }
 
   @Post()
   create(@Body() body: any) {
@@ -28,6 +27,16 @@ export class TimetablesController {
   @UseGuards(AuthGuard('jwt'))
   findByLecturer(@Param('lecturerId') lecturerId: string) {
     return this.service.findByLecturer(parseInt(lecturerId));
+  }
+
+  @Post('my')
+  @UseGuards(AuthGuard('jwt'))
+  createMine(@Request() req, @Body() body: any) {
+    const user = req.user;
+    return this.service.create({
+      ...body,
+      lecturerId: user.id,
+    });
   }
 
   @Get('my')
